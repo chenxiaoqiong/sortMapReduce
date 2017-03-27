@@ -16,9 +16,9 @@ import org.apache.hadoop.util.ToolRunner;
 
 import java.io.IOException;
 
-public class WebPVMapReduce extends Configured implements Tool {
+public class SortMapReduce extends Configured implements Tool {
 
-    public static class WordCountMapper
+    public static class SortMapper
             extends Mapper<LongWritable, Text, IntWritable, IntWritable> {
 
         private final static IntWritable ints = new IntWritable(1);
@@ -27,26 +27,23 @@ public class WebPVMapReduce extends Configured implements Tool {
         @Override
         protected void map(LongWritable key, Text value, Context context)
                 throws IOException, InterruptedException {
-            // TODO
             String line=value.toString();
 
             keyword.set(Integer.parseInt(line));
 
+            // void write(KEYOUT var1, VALUEOUT var2) 此方法会按KEYOUT var1自动排序
             context.write(keyword, ints);
         }
     }
 
-    public static class WordCountReducer
+    public static class SortReducer
             extends Reducer<IntWritable, IntWritable, IntWritable, IntWritable> {
 
         private IntWritable linenum  = new IntWritable(1);
 
-        private IntWritable out = new IntWritable();
-
         @Override
         protected void reduce(IntWritable key, Iterable<IntWritable> value, Context context)
                 throws IOException, InterruptedException {
-            // TODO Auto-generated method stub
 
             for(IntWritable val:value){
 
@@ -64,7 +61,7 @@ public class WebPVMapReduce extends Configured implements Tool {
 
         //创建job：
         Job job = Job.getInstance(conf, this.getClass().getSimpleName());
-        job.setJarByClass(WebPVMapReduce.class);
+        job.setJarByClass(SortMapReduce.class);
 
         //配置作业：
         // Input --> Map --> Reduce --> Output
@@ -74,12 +71,12 @@ public class WebPVMapReduce extends Configured implements Tool {
         //FileInputFormat过程会将文件处理（Format）成 <偏移量,每一行内容> 的key value对。
 
         //Map  设置Mapper类，设置Mapper类输出的Key、Value的类型：
-        job.setMapperClass(WordCountMapper.class);
+        job.setMapperClass(SortMapper.class);
         job.setMapOutputKeyClass(IntWritable.class);
         job.setMapOutputValueClass(IntWritable.class);
 
         //Reduce  设置Reducer类， 设置最终输出的 Key、Value的类型（setOutputKeyClass、setOutputValueClass）：
-        job.setReducerClass(WordCountReducer.class);
+        job.setReducerClass(SortReducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
 
@@ -94,7 +91,7 @@ public class WebPVMapReduce extends Configured implements Tool {
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
-        int status = ToolRunner.run(conf, new WebPVMapReduce(), args);
+        int status = ToolRunner.run(conf, new SortMapReduce(), args);
         System.exit(status);
     }
 }
